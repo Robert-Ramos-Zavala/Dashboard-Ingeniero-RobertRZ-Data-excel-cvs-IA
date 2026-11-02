@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingeniero - Robert Ramos Zavala Data Analytics | Dynamic Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS (xlsx) for parsing Excel & CSV files -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        // Dataset por defecto (50 estudiantes)
+        const defaultData = [
+            { "ID_Estudiante": "EST-001", "Nombre_Estudiante": "Ana Torres", "Curso": "Programación I", "Seccion": "A", "Ciclo": "II", "Nota_Tarea": 16, "Nota_Practica": 15, "Nota_Parcial": 14, "Nota_Proyecto": 17, "Nota_Final": 15, "Asistencia_Porcentaje": 92, "Participacion_Porcentaje": 88 },
+            { "ID_Estudiante": "EST-002", "Nombre_Estudiante": "Luis Mendoza", "Curso": "Programación I", "Seccion": "A", "Ciclo": "II", "Nota_Tarea": 14, "Nota_Practica": 13, "Nota_Parcial": 12, "Nota_Proyecto": 15, "Nota_Final": 13, "Asistencia_Porcentaje": 85, "Participacion_Porcentaje": 76 },
+            { "ID_Estudiante": "EST-003", "Nombre_Estudiante": "Carla Rojas", "Curso": "Programación I", "Seccion": "A", "Ciclo": "II", "Nota_Tarea": 18, "Nota_Practica": 17, "Nota_Parcial": 16, "Nota_Proyecto": 18, "Nota_Final": 17, "Asistencia_Porcentaje": 96, "Participacion_Porcentaje": 94 },
+            { "ID_Estudiante": "EST-004", "Nombre_Estudiante": "Diego Flores", "Curso": "Programación I", "Seccion": "A", "Ciclo": "II", "Nota_Tarea": 11, "Nota_Practica": 12, "Nota_Parcial": 10, "Nota_Proyecto": 13, "Nota_Final": 11, "Asistencia_Porcentaje": 72, "Participacion_Porcentaje": 58 },
+            { "ID_Estudiante": "EST-005", "Nombre_Estudiante": "María Castillo", "Curso": "Programación I", "Seccion": "A", "Ciclo": "II", "Nota_Tarea": 15, "Nota_Practica": 16, "Nota_Parcial": 14, "Nota_Proyecto": 16, "Nota_Final": 15, "Asistencia_Porcentaje": 89, "Participacion_Porcentaje": 82 },
+            { "ID_Estudiante": "EST-006", "Nombre_Estudiante": "Jorge Salazar", "Curso": "Programación I", "Seccion": "A", "Ciclo": "II", "Nota_Tarea": 17, "Nota_Practica": 16, "Nota_Parcial": 15, "Nota_Proyecto": 17, "Nota_Final": 16, "Asistencia_Porcentaje": 94, "Participacion_Porcentaje": 90 },
+            { "ID_Estudiante": "EST-007", "Nombre_Estudiante": "Sofía Vargas", "Curso": "Programación I", "Seccion": "A", "Ciclo": "II", "Nota_Tarea": 19, "Nota_Practica": 18, "Nota_Parcial": 17, "Nota_Proyecto": 19, "Nota_Final": 18, "Asistencia_Porcentaje": 98, "Participacion_Porcentaje": 96 },
+            { "ID_Estudiante": "EST-008", "Nombre_Estudiante": "Pedro Navarro", "Curso": "Programación I", "Seccion": "A", "Ciclo": "II", "Nota_Tarea": 10, "Nota_Practica": 10, "Nota_Parcial": 09, "Nota_Proyecto": 11, "Nota_Final": 10, "Asistencia_Porcentaje": 68, "Participacion_Porcentaje": 50 },
+            { "ID_Estudiante": "EST-009", "Nombre_Estudiante": "Lucía Herrera", "Curso": "Programación I", "Seccion": "A", "Ciclo": "II", "Nota_Tarea": 16, "Nota_Practica": 15, "Nota_Parcial": 15, "Nota_Proyecto": 16, "Nota_Final": 16, "Asistencia_Porcentaje": 91, "Participacion_Porcentaje": 85 },
+            { "ID_Estudiante": "EST-010", "Nombre_Estudiante": "Andrés Paredes", "Curso": "Programación I", "Seccion": "A", "Ciclo": "II", "Nota_Tarea": 13, "Nota_Practica": 14, "Nota_Parcial": 12, "Nota_Proyecto": 14, "Nota_Final": 13, "Asistencia_Porcentaje": 80, "Participacion_Porcentaje": 72 },
+            { "ID_Estudiante": "EST-011", "Nombre_Estudiante": "Valeria Campos", "Curso": "Base de Datos", "Seccion": "B", "Ciclo": "IV", "Nota_Tarea": 15, "Nota_Practica": 14, "Nota_Parcial": 13, "Nota_Proyecto": 16, "Nota_Final": 15, "Asistencia_Porcentaje": 88, "Participacion_Porcentaje": 80 },
+            { "ID_Estudiante": "EST-012", "Nombre_Estudiante": "Ricardo Peña", "Curso": "Base de Datos", "Seccion": "B", "Ciclo": "IV", "Nota_Tarea": 17, "Nota_Practica": 16, "Nota_Parcial": 15, "Nota_Proyecto": 17, "Nota_Final": 16, "Asistencia_Porcentaje": 93, "Participacion_Porcentaje": 89 },
+            { "ID_Estudiante": "EST-013", "Nombre_Estudiante": "Elena Mendoza", "Curso": "Base de Datos", "Seccion": "B", "Ciclo": "IV", "Nota_Tarea": 18, "Nota_Practica": 19, "Nota_Parcial": 17, "Nota_Proyecto": 18, "Nota_Final": 18, "Asistencia_Porcentaje": 97, "Participacion_Porcentaje": 95 },
+            { "ID_Estudiante": "EST-014", "Nombre_Estudiante": "Marco León", "Curso": "Base de Datos", "Seccion": "B", "Ciclo": "IV", "Nota_Tarea": 12, "Nota_Practica": 11, "Nota_Parcial": 11, "Nota_Proyecto": 13, "Nota_Final": 12, "Asistencia_Porcentaje": 75, "Participacion_Porcentaje": 65 },
+            { "ID_Estudiante": "EST-015", "Nombre_Estudiante": "Gabriela Ruiz", "Curso": "Base de Datos", "Seccion": "B", "Ciclo": "IV", "Nota_Tarea": 16, "Nota_Practica": 15, "Nota_Parcial": 14, "Nota_Proyecto": 16, "Nota_Final": 15, "Asistencia_Porcentaje": 90, "Participacion_Porcentaje": 84 },
+            { "ID_Estudiante": "EST-016", "Nombre_Estudiante": "Fernando Vega", "Curso": "Base de Datos", "Seccion": "B", "Ciclo": "IV", "Nota_Tarea": 14, "Nota_Practica": 15, "Nota_Parcial": 13, "Nota_Proyecto": 15, "Nota_Final": 14, "Asistencia_Porcentaje": 86, "Participacion_Porcentaje": 78 },
+            { "ID_Estudiante": "EST-017", "Nombre_Estudiante": "Daniela Cruz", "Curso": "Base de Datos", "Seccion": "B", "Ciclo": "IV", "Nota_Tarea": 17, "Nota_Practica": 16, "Nota_Parcial": 16, "Nota_Proyecto": 17, "Nota_Final": 16, "Asistencia_Porcentaje": 95, "Participacion_Porcentaje": 91 },
+            { "ID_Estudiante": "EST-018", "Nombre_Estudiante": "Miguel Soto", "Curso": "Base de Datos", "Seccion": "B", "Ciclo": "IV", "Nota_Tarea": 10, "Nota_Practica": 09, "Nota_Parcial": 11, "Nota_Proyecto": 10, "Nota_Final": 10, "Asistencia_Porcentaje": 69, "Participacion_Porcentaje": 52 },
+            { "ID_Estudiante": "EST-019", "Nombre_Estudiante": "Patricia Núñez", "Curso": "Base de Datos", "Seccion": "B", "Ciclo": "IV", "Nota_Tarea": 15, "Nota_Practica": 16, "Nota_Parcial": 14, "Nota_Proyecto": 16, "Nota_Final": 15, "Asistencia_Porcentaje": 87, "Participacion_Porcentaje": 82 },
+            { "ID_Estudiante": "EST-020", "Nombre_Estudiante": "Carlos Reyes", "Curso": "Base de Datos", "Seccion": "B", "Ciclo": "IV", "Nota_Tarea": 13, "Nota_Practica": 12, "Nota_Parcial": 11, "Nota_Proyecto": 13, "Nota_Final": 12, "Asistencia_Porcentaje": 78, "Participacion_Porcentaje": 70 },
+            { "ID_Estudiante": "EST-021", "Nombre_Estudiante": "Rosa Medina", "Curso": "Ingeniería de Software", "Seccion": "C", "Ciclo": "VI", "Nota_Tarea": 16, "Nota_Practica": 17, "Nota_Parcial": 15, "Nota_Proyecto": 17, "Nota_Final": 16, "Asistencia_Porcentaje": 93, "Participacion_Porcentaje": 87 },
+            { "ID_Estudiante": "EST-022", "Nombre_Estudiante": "Héctor Vargas", "Curso": "Ingeniería de Software", "Seccion": "C", "Ciclo": "VI", "Nota_Tarea": 14, "Nota_Practica": 13, "Nota_Parcial": 12, "Nota_Proyecto": 14, "Nota_Final": 13, "Asistencia_Porcentaje": 82, "Participacion_Porcentaje": 74 },
+            { "ID_Estudiante": "EST-023", "Nombre_Estudiante": "Natalia Silva", "Curso": "Ingeniería de Software", "Seccion": "C", "Ciclo": "VI", "Nota_Tarea": 19, "Nota_Practica": 18, "Nota_Parcial": 17, "Nota_Proyecto": 19, "Nota_Final": 18, "Asistencia_Porcentaje": 99, "Participacion_Porcentaje": 97 },
+            { "ID_Estudiante": "EST-024", "Nombre_Estudiante": "Óscar Fuentes", "Curso": "Ingeniería de Software", "Seccion": "C", "Ciclo": "VI", "Nota_Tarea": 10, "Nota_Practica": 10, "Nota_Parcial": 09, "Nota_Proyecto": 10, "Nota_Final": 10, "Asistencia_Porcentaje": 65, "Participacion_Porcentaje": 48 },
+            { "ID_Estudiante": "EST-025", "Nombre_Estudiante": "Andrea Lozano", "Curso": "Ingeniería de Software", "Seccion": "C", "Ciclo": "VI", "Nota_Tarea": 17, "Nota_Practica": 16, "Nota_Parcial": 15, "Nota_Proyecto": 17, "Nota_Final": 16, "Asistencia_Porcentaje": 92, "Participacion_Porcentaje": 88 },
+            { "ID_Estudiante": "EST-026", "Nombre_Estudiante": "Sergio Molina", "Curso": "Ingeniería de Software", "Seccion": "C", "Ciclo": "VI", "Nota_Tarea": 13, "Nota_Practica": 12, "Nota_Parcial": 11, "Nota_Proyecto": 13, "Nota_Final": 12, "Asistencia_Porcentaje": 79, "Participacion_Porcentaje": 68 },
+            { "ID_Estudiante": "EST-027", "Nombre_Estudiante": "Claudia Espinoza", "Curso": "Ingeniería de Software", "Seccion": "C", "Ciclo": "VI", "Nota_Tarea": 18, "Nota_Practica": 17, "Nota_Parcial": 16, "Nota_Proyecto": 18, "Nota_Final": 17, "Asistencia_Porcentaje": 96, "Participacion_Porcentaje": 93 },
+            { "ID_Estudiante": "EST-028", "Nombre_Estudiante": "Raúl Cabrera", "Curso": "Ingeniería de Software", "Seccion": "C", "Ciclo": "VI", "Nota_Tarea": 15, "Nota_Practica": 14, "Nota_Parcial": 13, "Nota_Proyecto": 15, "Nota_Final": 14, "Asistencia_Porcentaje": 84, "Participacion_Porcentaje": 77 },
+            { "ID_Estudiante": "EST-029", "Nombre_Estudiante": "Mónica Valdez", "Curso": "Ingeniería de Software", "Seccion": "C", "Ciclo": "VI", "Nota_Tarea": 16, "Nota_Practica": 17, "Nota_Parcial": 15, "Nota_Proyecto": 17, "Nota_Final": 16, "Asistencia_Porcentaje": 91, "Participacion_Porcentaje": 86 },
+            { "ID_Estudiante": "EST-030", "Nombre_Estudiante": "Iván Palomino", "Curso": "Ingeniería de Software", "Seccion": "C", "Ciclo": "VI", "Nota_Tarea": 12, "Nota_Practica": 11, "Nota_Parcial": 11, "Nota_Proyecto": 12, "Nota_Final": 11, "Asistencia_Porcentaje": 74, "Participacion_Porcentaje": 62 },
+            { "ID_Estudiante": "EST-031", "Nombre_Estudiante": "Gabriela Torres", "Curso": "Inteligencia Artificial", "Seccion": "D", "Ciclo": "VIII", "Nota_Tarea": 19, "Nota_Practica": 18, "Nota_Parcial": 17, "Nota_Proyecto": 19, "Nota_Final": 18, "Asistencia_Porcentaje": 98, "Participacion_Porcentaje": 96 },
+            { "ID_Estudiante": "EST-032", "Nombre_Estudiante": "Daniel Rivas", "Curso": "Inteligencia Artificial", "Seccion": "D", "Ciclo": "VIII", "Nota_Tarea": 13, "Nota_Practica": 14, "Nota_Parcial": 12, "Nota_Proyecto": 14, "Nota_Final": 13, "Asistencia_Porcentaje": 81, "Participacion_Porcentaje": 73 },
+            { "ID_Estudiante": "EST-033", "Nombre_Estudiante": "Alejandra Ponce", "Curso": "Inteligencia Artificial", "Seccion": "D", "Ciclo": "VIII", "Nota_Tarea": 16, "Nota_Practica": 15, "Nota_Parcial": 15, "Nota_Proyecto": 17, "Nota_Final": 16, "Asistencia_Porcentaje": 92, "Participacion_Porcentaje": 87 },
+            { "ID_Estudiante": "EST-034", "Nombre_Estudiante": "Bruno Castro", "Curso": "Inteligencia Artificial", "Seccion": "D", "Ciclo": "VIII", "Nota_Tarea": 14, "Nota_Practica": 13, "Nota_Parcial": 12, "Nota_Proyecto": 14, "Nota_Final": 13, "Asistencia_Porcentaje": 83, "Participacion_Porcentaje": 75 },
+            { "ID_Estudiante": "EST-035", "Nombre_Estudiante": "Camila Ortiz", "Curso": "Inteligencia Artificial", "Seccion": "D", "Ciclo": "VIII", "Nota_Tarea": 18, "Nota_Practica": 17, "Nota_Parcial": 16, "Nota_Proyecto": 18, "Nota_Final": 17, "Asistencia_Porcentaje": 95, "Participacion_Porcentaje": 92 },
+            { "ID_Estudiante": "EST-036", "Nombre_Estudiante": "Sebastián Arias", "Curso": "Inteligencia Artificial", "Seccion": "D", "Ciclo": "VIII", "Nota_Tarea": 15, "Nota_Practica": 16, "Nota_Parcial": 14, "Nota_Proyecto": 16, "Nota_Final": 15, "Asistencia_Porcentaje": 87, "Participacion_Porcentaje": 81 },
+            { "ID_Estudiante": "EST-037", "Nombre_Estudiante": "Fernanda Vera", "Curso": "Inteligencia Artificial", "Seccion": "D", "Ciclo": "VIII", "Nota_Tarea": 17, "Nota_Practica": 16, "Nota_Parcial": 15, "Nota_Proyecto": 17, "Nota_Final": 16, "Asistencia_Porcentaje": 94, "Participacion_Porcentaje": 90 },
+            { "ID_Estudiante": "EST-038", "Nombre_Estudiante": "Álvaro Medina", "Curso": "Inteligencia Artificial", "Seccion": "D", "Ciclo": "VIII", "Nota_Tarea": 10, "Nota_Practica": 10, "Nota_Parcial": 09, "Nota_Proyecto": 10, "Nota_Final": 10, "Asistencia_Porcentaje": 67, "Participacion_Porcentaje": 51 },
+            { "ID_Estudiante": "EST-039", "Nombre_Estudiante": "Paola Benavides", "Curso": "Inteligencia Artificial", "Seccion": "D", "Ciclo": "VIII", "Nota_Tarea": 16, "Nota_Practica": 15, "Nota_Parcial": 14, "Nota_Proyecto": 16, "Nota_Final": 15, "Asistencia_Porcentaje": 89, "Participacion_Porcentaje": 83 },
+            { "ID_Estudiante": "EST-040", "Nombre_Estudiante": "Esteban Ramos", "Curso": "Inteligencia Artificial", "Seccion": "D", "Ciclo": "VIII", "Nota_Tarea": 12, "Nota_Practica": 11, "Nota_Parcial": 10, "Nota_Proyecto": 12, "Nota_Final": 11, "Asistencia_Porcentaje": 73, "Participacion_Porcentaje": 60 },
+            { "ID_Estudiante": "EST-041", "Nombre_Estudiante": "Juliana Salas", "Curso": "Computación Gráfica", "Seccion": "E", "Ciclo": "VII", "Nota_Tarea": 15, "Nota_Practica": 16, "Nota_Parcial": 14, "Nota_Proyecto": 16, "Nota_Final": 15, "Asistencia_Porcentaje": 88, "Participacion_Porcentaje": 80 },
+            { "ID_Estudiante": "EST-042", "Nombre_Estudiante": "Manuel Cárdenas", "Curso": "Computación Gráfica", "Seccion": "E", "Ciclo": "VII", "Nota_Tarea": 13, "Nota_Practica": 12, "Nota_Parcial": 11, "Nota_Proyecto": 13, "Nota_Final": 12, "Asistencia_Porcentaje": 77, "Participacion_Porcentaje": 69 },
+            { "ID_Estudiante": "EST-043", "Nombre_Estudiante": "Renata Villanueva", "Curso": "Computación Gráfica", "Seccion": "E", "Ciclo": "VII", "Nota_Tarea": 19, "Nota_Practica": 18, "Nota_Parcial": 17, "Nota_Proyecto": 19, "Nota_Final": 18, "Asistencia_Porcentaje": 98, "Participacion_Porcentaje": 95 },
+            { "ID_Estudiante": "EST-044", "Nombre_Estudiante": "Cristian Aguilar", "Curso": "Computación Gráfica", "Seccion": "E", "Ciclo": "VII", "Nota_Tarea": 17, "Nota_Practica": 16, "Nota_Parcial": 15, "Nota_Proyecto": 17, "Nota_Final": 16, "Asistencia_Porcentaje": 93, "Participacion_Porcentaje": 88 },
+            { "ID_Estudiante": "EST-045", "Nombre_Estudiante": "Beatriz Romero", "Curso": "Computación Gráfica", "Seccion": "E", "Ciclo": "VII", "Nota_Tarea": 14, "Nota_Practica": 15, "Nota_Parcial": 13, "Nota_Proyecto": 15, "Nota_Final": 14, "Asistencia_Porcentaje": 85, "Participacion_Porcentaje": 77 },
+            { "ID_Estudiante": "EST-046", "Nombre_Estudiante": "Joaquín Méndez", "Curso": "Computación Gráfica", "Seccion": "E", "Ciclo": "VII", "Nota_Tarea": 16, "Nota_Practica": 15, "Nota_Parcial": 14, "Nota_Proyecto": 16, "Nota_Final": 15, "Asistencia_Porcentaje": 90, "Participacion_Porcentaje": 84 },
+            { "ID_Estudiante": "EST-047", "Nombre_Estudiante": "Teresa Valdivia", "Curso": "Computación Gráfica", "Seccion": "E", "Ciclo": "VII", "Nota_Tarea": 12, "Nota_Practica": 11, "Nota_Parcial": 11, "Nota_Proyecto": 12, "Nota_Final": 11, "Asistencia_Porcentaje": 76, "Participacion_Porcentaje": 64 },
+            { "ID_Estudiante": "EST-048", "Nombre_Estudiante": "Nicolás Zamora", "Curso": "Computación Gráfica", "Seccion": "E", "Ciclo": "VII", "Nota_Tarea": 10, "Nota_Practica": 09, "Nota_Parcial": 10, "Nota_Proyecto": 11, "Nota_Final": 10, "Asistencia_Porcentaje": 66, "Participacion_Porcentaje": 49 },
+            { "ID_Estudiante": "EST-049", "Nombre_Estudiante": "Adriana Salinas", "Curso": "Computación Gráfica", "Seccion": "E", "Ciclo": "VII", "Nota_Tarea": 18, "Nota_Practica": 17, "Nota_Parcial": 16, "Nota_Proyecto": 18, "Nota_Final": 17, "Asistencia_Porcentaje": 96, "Participacion_Porcentaje": 92 },
+            { "ID_Estudiante": "EST-050", "Nombre_Estudiante": "Roberto Chávez", "Curso": "Computación Gráfica", "Seccion": "E", "Ciclo": "VII", "Nota_Tarea": 15, "Nota_Practica": 14, "Nota_Parcial": 13, "Nota_Proyecto": 15, "Nota_Final": 14, "Asistencia_Porcentaje": 86, "Participacion_Porcentaje": 79 }
+        ];
+
+        let activeDataset = [...defaultData];
+        let filteredData = [...defaultData];
+        let chartInstances = {};
+        let colKeys = { nameKey: "Nombre_Estudiante", scoreKey: "Nota_Final", categoryKey: "Curso", asistenciaKey: "Asistencia_Porcentaje" };
+
+        window.onload = function() {
+            detectDatasetColumns(activeDataset[0]);
+            poblarSelectorCategoria();
+            renderDashboard();
+        };
+
+        // Custom Notification Function to replace alert()
+        function showNotification(msg, type = 'error') {
+            const toast = document.getElementById('notification-toast');
+            const msgEl = document.getElementById('notification-msg');
+            const iconEl = document.getElementById('notification-icon');
+            
+            msgEl.innerText = msg;
+            
+            if (type === 'error') {
+                toast.classList.remove('bg-emerald-600');
+                toast.classList.add('bg-rose-600');
+                iconEl.className = 'fa-solid fa-circle-exclamation';
+            } else {
+                toast.classList.remove('bg-rose-600');
+                toast.classList.add('bg-emerald-600');
+                iconEl.className = 'fa-solid fa-circle-check';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => { 
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 4000);
+        }
+
+        // File Uploader Parser
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const parsedJson = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                    if (parsedJson.length === 0) {
+                        showNotification("El archivo subido no contiene datos válidos.", "error");
+                        return;
+                    }
+
+                    activeDataset = parsedJson;
+                    detectDatasetColumns(parsedJson[0]);
+
+                    // Display info banner
+                    document.getElementById('fileInfoBanner').classList.remove('hidden');
+                    document.getElementById('fileNameDisplay').innerText = file.name;
+                    document.getElementById('fileStatsDisplay').innerText = `Cargados ${parsedJson.length} registros y ${Object.keys(parsedJson[0]).length} columnas analizadas dinámicamente.`;
+
+                    poblarSelectorCategoria();
+                    aplicarFiltroDinamico();
+                    showNotification("Dataset cargado correctamente.", "success");
+                } catch (err) {
+                    console.error("Error al procesar el archivo:", err);
+                    showNotification("Ocurrió un error al leer el archivo. Asegúrate de subir un formato .csv o .xlsx válido.", "error");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function resetDefaultDataset() {
+            activeDataset = [...defaultData];
+            detectDatasetColumns(activeDataset[0]);
+            document.getElementById('fileInfoBanner').classList.add('hidden');
+            document.getElementById('fileUploader').value = "";
+            poblarSelectorCategoria();
+            aplicarFiltroDinamico();
+            showNotification("Dataset por defecto restaurado.", "success");
+        }
+
+        function detectDatasetColumns(sampleRow) {
+            if (!sampleRow) return;
+            const keys = Object.keys(sampleRow);
+            
+            // Auto detect columns
+            colKeys.nameKey = keys.find(k => /nombre|student|alumno|name|item|persona|estudiante|empleado|cliente/i.test(k)) || keys[0];
+            colKeys.scoreKey = keys.find(k => /final|nota|score|promedio|grade|puntos|value|val|monto|total|venta/i.test(k)) || keys.find(k => typeof sampleRow[k] === 'number') || keys[1];
+            colKeys.categoryKey = keys.find(k => /curso|categoria|category|seccion|grupo|departamento|class|tipo|area/i.test(k)) || keys[2] || keys[0];
+            colKeys.asistenciaKey = keys.find(k => /asistencia|faltas|attendance|pct|porcentaje|cumplimiento|ratio/i.test(k)) || colKeys.scoreKey;
+
+            // Dynamically rename UI Module Titles & Labels based on column names safely
+            const scoreLabel = colKeys.scoreKey ? colKeys.scoreKey.replace(/_/g, ' ') : 'Nota';
+            const asistLabel = colKeys.asistenciaKey ? colKeys.asistenciaKey.replace(/_/g, ' ') : 'Asistencia';
+            const catLabel = colKeys.categoryKey ? colKeys.categoryKey.replace(/_/g, ' ') : 'Curso';
+
+            const setSafeText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            };
+
+            setSafeText('kpi1-label', `Alto ${scoreLabel} (≥ 11 / Sup)`);
+            setSafeText('kpi2-label', `Bajo ${scoreLabel} (< 11 / Inf)`);
+            setSafeText('kpi3-label', `Prom. ${asistLabel}`);
+
+            setSafeText('tab-aprobados-label', `${scoreLabel}`);
+            setSafeText('tab-asistencia-label', `${asistLabel}`);
+            setSafeText('tab-parentesco-label', `Grupos / ${catLabel}`);
+
+            setSafeText('chart1-title', `Distribución por ${scoreLabel}`);
+            setSafeText('chart2-title', `Top 5 con Mayor ${asistLabel}`);
+            setSafeText('chart3-title', `Top 5 con Menor ${asistLabel}`);
+            setSafeText('chart4-title', `Frecuencia por ${catLabel}`);
+        }
+
+        // --- GEMINI AI INTEGRATION ENGINE ---
+
+        async function openAIReportModal() {
+            const modal = document.getElementById('aiModal');
+            const loading = document.getElementById('aiLoading');
+            const reportContent = document.getElementById('aiReportContent');
+
+            modal.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            reportContent.classList.add('hidden');
+            reportContent.innerHTML = '';
+
+            try {
+                // Prepare dataset sample summary for Gemini API
+                const total = filteredData.length;
+                const scoreK = colKeys.scoreKey;
+                const asistK = colKeys.asistenciaKey;
+                const catK = colKeys.categoryKey;
+                const nameK = colKeys.nameKey;
+
+                const sampleRows = filteredData.slice(0, 15);
+                const avgScore = (filteredData.reduce((acc, c) => acc + (Number(c[scoreK]) || 0), 0) / total).toFixed(2);
+                const avgAsist = (filteredData.reduce((acc, c) => acc + (Number(c[asistK]) || 0), 0) / total).toFixed(2);
+
+                const promptText = `Actúa como un Consultor Senior de Data Analytics. Analiza el siguiente dataset cargado ("${total}" registros totales).
+Columnas clave detectadas: Nombre/ID: "${nameK}", Métrica Principal: "${scoreK}" (Promedio: ${avgScore}), Métrica Secundaria: "${asistK}" (Promedio: ${avgAsist}), Categoría: "${catK}".
+
+Muestra de datos (primeros 15 registros):
+${JSON.stringify(sampleRows, null, 2)}
+
+Por favor elabora un informe ejecutivo profesional en formato HTML limpio estructurado con etiquetas <h4>, <ul>, <li>, y <p> resaltando:
+1. Resumen Ejecutivo de Desempeño
+2. Hallazgos Clave y Tendencias
+3. Registros de Alto Riesgo o Atención Prioritaria
+4. Recomendaciones Estratégicas y Acciones Inmediatas.
+Firma el reporte como "Informe elaborado por Ingeniero - Robert Ramos Zavala Data Analytics Engine".`;
+
+                const systemPrompt = "Eres un analista de datos ejecutivo experto que genera informes claros, accionables y profesionales en HTML estilizado.";
+                const apiKey = ""; // INSERTA TU API KEY AQUI
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: promptText }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+
+                // Exponential backoff fetch wrapper
+                let response = null;
+                let delay = 1000;
+                for (let i = 0; i < 3; i++) {
+                    try {
+                        response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if (response.ok) break;
+                    } catch (e) {
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2;
+                    }
+                }
+
+                if (!response || !response.ok) {
+                    throw new Error("No se pudo obtener respuesta del modelo Gemini. Verifica si tienes la API KEY configurada.");
+                }
+
+                const result = await response.json();
+                const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text || "No se pudo generar el texto del informe.";
+
+                loading.classList.add('hidden');
+                reportContent.classList.remove('hidden');
+                reportContent.innerHTML = aiText;
+
+            } catch (err) {
+                console.error("Error generando informe IA:", err);
+                loading.classList.add('hidden');
+                reportContent.classList.remove('hidden');
+                reportContent.innerHTML = `<div class="p-4 bg-rose-950/40 border border-rose-800 rounded-xl text-rose-300">
+                    <p class="font-bold">Aviso IA</p>
+                    <p class="text-xs mt-1">Para generar informes necesitas colocar una API Key válida de Gemini en el código fuente. <br/> (Actualmente el valor apiKey está vacío en la función openAIReportModal).</p>
+                </div>`;
+            }
+        }
+
+        function closeAIReportModal() {
+            document.getElementById('aiModal').classList.add('hidden');
+        }
+
+        function poblarSelectorCategoria() {
+            const select = document.getElementById('filtroCategoria');
+            select.innerHTML = '<option value="TODOS">Todos los registros</option>';
+            
+            const catKey = colKeys.categoryKey;
+            const categorias = [...new Set(activeDataset.map(d => d[catKey]))].filter(Boolean);
+
+            categorias.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.innerText = cat;
+                select.appendChild(opt);
+            });
+        }
+
+        function aplicarFiltroDinamico() {
+            const valCat = document.getElementById('filtroCategoria').value;
+            const catKey = colKeys.categoryKey;
+
+            filteredData = activeDataset.filter(d => {
+                return valCat === 'TODOS' || d[catKey] == valCat;
+            });
+
+            renderDashboard();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+            });
+
+            const activeContent = document.getElementById(`content-${tabId}`);
+            if (activeContent) activeContent.classList.remove('hidden');
+
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+                activeBtn.classList.add('bg-indigo-600', 'text-white');
+            }
+
+            renderDashboard();
+        }
+
+        function destroyChart(id) {
+            if (chartInstances[id]) {
+                chartInstances[id].destroy();
+                delete chartInstances[id];
+            }
+        }
+
+        function renderDashboard() {
+            actualizarKPIs();
+            renderResumenCharts();
+            renderAprobadosTab();
+            renderAsistenciaTab();
+            renderParentescoTab();
+            renderTablaCompleta();
+        }
+
+        function getApellido(nombreCompleto) {
+            if (!nombreCompleto || typeof nombreCompleto !== 'string') return 'N/A';
+            const partes = nombreCompleto.trim().split(' ');
+            return partes.length > 1 ? partes[partes.length - 1] : partes[0];
+        }
+
+        function actualizarKPIs() {
+            const total = filteredData.length;
+            const scoreK = colKeys.scoreKey;
+            const asistK = colKeys.asistenciaKey;
+
+            const aprobados = filteredData.filter(d => Number(d[scoreK]) >= 11).length;
+            const desaprobados = total - aprobados;
+            
+            const totalAsist = filteredData.reduce((acc, curr) => acc + (Number(curr[asistK]) || 0), 0);
+            const avgAsistencia = total > 0 ? (totalAsist / total).toFixed(1) : 0;
+
+            document.getElementById('kpi-total').innerText = total;
+            document.getElementById('kpi-aprobados').innerText = aprobados;
+            document.getElementById('kpi-aprobados-pct').innerText = `(${total > 0 ? Math.round((aprobados / total) * 100) : 0}%)`;
+
+            document.getElementById('kpi-desaprobados').innerText = desaprobados;
+            document.getElementById('kpi-desaprobados-pct').innerText = `(${total > 0 ? Math.round((desaprobados / total) * 100) : 0}%)`;
+
+            document.getElementById('kpi-asistencia').innerText = `${avgAsistencia}%`;
+        }
+
+        // --- CHARTS RENDER ENGINE ---
+
+        function renderResumenCharts() {
+            const scoreK = colKeys.scoreKey;
+            const nameK = colKeys.nameKey;
+            const asistK = colKeys.asistenciaKey;
+
+            // Chart 1: Doughnut Aprobados
+            const aprobadosCount = filteredData.filter(d => Number(d[scoreK]) >= 11).length;
+            const desaprobadosCount = filteredData.length - aprobadosCount;
+
+            destroyChart('chartResumenAprobados');
+            chartInstances['chartResumenAprobados'] = new Chart(document.getElementById('chartResumenAprobados'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Aprobados (≥11)', 'Desaprobados (<11)'],
+                    datasets: [{
+                        data: [aprobadosCount, desaprobadosCount],
+                        backgroundColor: ['#10b981', '#f43f5e'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8' } } }
+                }
+            });
+
+            // Chart 2: Top Asistencia / Score
+            const sortedTop = [...filteredData].sort((a,b) => (Number(b[asistK]) || 0) - (Number(a[asistK]) || 0)).slice(0, 5);
+            destroyChart('chartResumenAsistencia');
+            chartInstances['chartResumenAsistencia'] = new Chart(document.getElementById('chartResumenAsistencia'), {
+                type: 'bar',
+                data: {
+                    labels: sortedTop.map(d => String(d[nameK] || 'Reg')),
+                    datasets: [{
+                        label: 'Valor',
+                        data: sortedTop.map(d => Number(d[asistK]) || 0),
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Chart 3: Top Faltas / Menores
+            const sortedBottom = [...filteredData].sort((a,b) => (Number(a[asistK]) || 0) - (Number(b[asistK]) || 0)).slice(0, 5);
+            destroyChart('chartResumenFaltas');
+            chartInstances['chartResumenFaltas'] = new Chart(document.getElementById('chartResumenFaltas'), {
+                type: 'bar',
+                data: {
+                    labels: sortedBottom.map(d => String(d[nameK] || 'Reg')),
+                    datasets: [{
+                        label: 'Inasistencia / Faltas',
+                        data: sortedBottom.map(d => Math.max(0, 100 - (Number(d[asistK]) || 0))),
+                        backgroundColor: '#f43f5e',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Chart 4: Apellidos
+            const mapApellidos = {};
+            filteredData.forEach(d => {
+                const ap = getApellido(String(d[nameK] || ''));
+                if (ap !== 'N/A') mapApellidos[ap] = (mapApellidos[ap] || 0) + 1;
+            });
+            const coapellidos = Object.keys(mapApellidos).filter(ap => mapApellidos[ap] > 1);
+
+            destroyChart('chartResumenApellidos');
+            chartInstances['chartResumenApellidos'] = new Chart(document.getElementById('chartResumenApellidos'), {
+                type: 'bar',
+                data: {
+                    labels: coapellidos.length > 0 ? coapellidos : ['Sin coincidencias'],
+                    datasets: [{
+                        label: 'Cantidad',
+                        data: coapellidos.length > 0 ? coapellidos.map(ap => mapApellidos[ap]) : [0],
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: '#1e293b' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderAprobadosTab() {
+            const scoreK = colKeys.scoreKey;
+            const nameK = colKeys.nameKey;
+            const catK = colKeys.categoryKey;
+            const asistK = colKeys.asistenciaKey;
+
+            const desaprobados = filteredData.filter(d => Number(d[scoreK]) < 11);
+            const tbody = document.getElementById('tablaDesaprobados');
+            
+            tbody.innerHTML = desaprobados.map((d, i) => `
+                <tr class="hover:bg-slate-800/40">
+                    <td class="p-3 font-semibold text-indigo-400">#${i+1}</td>
+                    <td class="p-3 font-medium text-white">${d[nameK] || 'N/A'}</td>
+                    <td class="p-3 text-slate-400">${d[catK] || 'N/A'}</td>
+                    <td class="p-3 text-center font-bold text-rose-400">${d[scoreK] ?? 'N/A'}</td>
+                    <td class="p-3 text-center font-semibold text-rose-300">${d[asistK] ?? 'N/A'}%</td>
+                </tr>
+            `).join('');
+
+            const aprobadosCount = filteredData.filter(d => Number(d[scoreK]) >= 11).length;
+            destroyChart('chartDetalleAprobados');
+            chartInstances['chartDetalleAprobados'] = new Chart(document.getElementById('chartDetalleAprobados'), {
+                type: 'pie',
+                data: {
+                    labels: ['Aprobados', 'Desaprobados'],
+                    datasets: [{
+                        data: [aprobadosCount, desaprobados.length],
+                        backgroundColor: ['#10b981', '#f43f5e']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8' } } }
+                }
+            });
+        }
+
+        function renderAsistenciaTab() {
+            const nameK = colKeys.nameKey;
+            const asistK = colKeys.asistenciaKey;
+
+            const top10Asistencia = [...filteredData].sort((a,b) => (Number(b[asistK])||0) - (Number(a[asistK])||0)).slice(0, 10);
+            destroyChart('chartDetalleAsistencia');
+            chartInstances['chartDetalleAsistencia'] = new Chart(document.getElementById('chartDetalleAsistencia'), {
+                type: 'bar',
+                data: {
+                    labels: top10Asistencia.map(d => String(d[nameK] || 'N/A')),
+                    datasets: [{
+                        label: '% Asistencia',
+                        data: top10Asistencia.map(d => Number(d[asistK]) || 0),
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const top10Faltas = [...filteredData].sort((a,b) => (Number(a[asistK])||0) - (Number(b[asistK])||0)).slice(0, 10);
+            destroyChart('chartDetalleFaltas');
+            chartInstances['chartDetalleFaltas'] = new Chart(document.getElementById('chartDetalleFaltas'), {
+                type: 'bar',
+                data: {
+                    labels: top10Faltas.map(d => String(d[nameK] || 'N/A')),
+                    datasets: [{
+                        label: '% Faltas',
+                        data: top10Faltas.map(d => Math.max(0, 100 - (Number(d[asistK]) || 0))),
+                        backgroundColor: '#f43f5e',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderParentescoTab() {
+            const nameK = colKeys.nameKey;
+            const catK = colKeys.categoryKey;
+            const mapApellidos = {};
+
+            filteredData.forEach(d => {
+                const ap = getApellido(String(d[nameK] || ''));
+                if (ap !== 'N/A') {
+                    if (!mapApellidos[ap]) mapApellidos[ap] = [];
+                    mapApellidos[ap].push(d);
+                }
+            });
+
+            const coapellidos = Object.keys(mapApellidos).filter(ap => mapApellidos[ap].length > 1);
+            const container = document.getElementById('cardsParentesco');
+            
+            if (coapellidos.length === 0) {
+                container.innerHTML = `<div class="col-span-full p-4 text-center text-slate-500 text-xs bg-slate-950/50 rounded-xl">No se encontraron coincidencia de apellidos en la muestra actual.</div>`;
+            } else {
+                container.innerHTML = coapellidos.map(ap => `
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-amber-400 text-xs">Apellido: ${ap}</span>
+                            <span class="bg-amber-500/10 text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-semibold">${mapApellidos[ap].length} coincidencia(s)</span>
+                        </div>
+                        <ul class="space-y-1 text-xs text-slate-300">
+                            ${mapApellidos[ap].map(st => `<li class="flex items-center space-x-2"><i class="fa-solid fa-user text-slate-600 text-[10px]"></i><span>${st[nameK]} <span class="text-slate-500">(${st[catK] || 'General'})</span></span></li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('');
+            }
+
+            destroyChart('chartDetalleParentesco');
+            chartInstances['chartDetalleParentesco'] = new Chart(document.getElementById('chartDetalleParentesco'), {
+                type: 'bar',
+                data: {
+                    labels: coapellidos,
+                    datasets: [{
+                        label: 'Número de Coincidencias',
+                        data: coapellidos.map(ap => mapApellidos[ap].length),
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: '#1e293b' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderTablaCompleta() {
+            if (filteredData.length === 0) return;
+
+            const keys = Object.keys(filteredData[0]);
+            const thead = document.getElementById('tablaHeader');
+            const tbody = document.getElementById('tablaCompletaBody');
+
+            thead.innerHTML = `
+                <tr>
+                    ${keys.map(k => `<th class="p-3 font-semibold">${k}</th>`).join('')}
+                </tr>
+            `;
+
+            tbody.innerHTML = filteredData.map(row => `
+                <tr class="hover:bg-slate-800/40 border-b border-slate-800/40 transition">
+                    ${keys.map(k => `<td class="p-3 text-slate-300">${row[k] !== undefined ? row[k] : ''}</td>`).join('')}
+                </tr>
+            `).join('');
+        }
+
+        function filtrarTabla() {
+            const q = document.getElementById('inputSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#tablaCompletaBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased relative">
+
+    <!-- Global Notification Toast -->
+    <div id="notification-toast" class="opacity-0 translate-y-20 transform transition-all duration-300 fixed bottom-4 right-4 bg-rose-600 text-white px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center space-x-3 max-w-sm border border-white/10">
+        <i id="notification-icon" class="fa-solid fa-circle-exclamation text-lg"></i>
+        <span id="notification-msg" class="text-sm font-medium"></span>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-xl backdrop-blur-lg bg-opacity-90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between py-3.5 gap-4">
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <div class="bg-gradient-to-tr from-indigo-600 to-violet-500 p-2.5 rounded-xl text-white shadow-lg shadow-indigo-500/25">
+                        <i class="fa-solid fa-chart-pie text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-base sm:text-lg leading-tight text-white tracking-wide">Ingeniero - Robert Ramos Zavala Data Analytics</h1>
+                        <p class="text-xs text-indigo-400 font-medium flex items-center gap-1.5 mt-0.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Platform Analytics & Custom Dataset Engine
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Custom Dataset Upload & Quick Filters -->
+                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+                    <!-- AI Smart Report Button -->
+                    <button onclick="openAIReportModal()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition flex items-center space-x-2 shadow-md shadow-purple-600/30 border border-purple-500/50">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+                        <span>Generar Informe IA</span>
+                    </button>
+
+                    <!-- Dynamic Dataset Upload Button -->
+                    <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition flex items-center space-x-2 shadow-md">
+                        <i class="fa-solid fa-file-arrow-up text-indigo-400"></i>
+                        <span>Cargar Dataset (Excel / CSV)</span>
+                        <input type="file" id="fileUploader" accept=".csv, .xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
+                    </label>
+
+                    <!-- Dynamic Category Selector Filter -->
+                    <div class="flex items-center space-x-2">
+                        <label for="filtroCategoria" class="text-xs font-semibold text-slate-400 hidden md:block">Filtro:</label>
+                        <select id="filtroCategoria" onchange="aplicarFiltroDinamico()" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none">
+                            <option value="TODOS">Todos los registros</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs Bar -->
+    <div class="bg-slate-900/80 border-b border-slate-800 sticky top-[72px] sm:top-[65px] z-20 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex space-x-2 sm:space-x-4 overflow-x-auto py-2.5 scrollbar-none" aria-label="Tabs">
+                <button onclick="switchTab('resumen')" id="tab-resumen" class="tab-btn px-4 py-2 text-xs font-semibold rounded-lg text-white bg-indigo-600 transition flex items-center space-x-2 whitespace-nowrap shadow-sm">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Resumen Ejecutivo</span>
+                </button>
+                <button onclick="switchTab('aprobados')" id="tab-aprobados" class="tab-btn px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-square-poll-vertical"></i>
+                    <span id="tab-aprobados-label">Cumplimiento / Rendimiento</span>
+                </button>
+                <button onclick="switchTab('asistencia')" id="tab-asistencia" class="tab-btn px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span id="tab-asistencia-label">Métrica Segundaria</span>
+                </button>
+                <button onclick="switchTab('parentesco')" id="tab-parentesco" class="tab-btn px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-people-arrows"></i>
+                    <span id="tab-parentesco-label">Agrupación por Coincidencias</span>
+                </button>
+                <button onclick="switchTab('lista')" id="tab-lista" class="tab-btn px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-database"></i>
+                    <span id="tab-lista-label">Matriz Completa de Datos</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- AI Report Modal Overlay -->
+    <div id="aiModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-gradient-to-tr from-purple-600 to-indigo-600 text-white rounded-xl">
+                        <i class="fa-solid fa-brain text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base">Informe Inteligente de Data Analytics</h3>
+                        <p class="text-xs text-indigo-400">Generado con IA usando Gemini 3 Flash API</p>
+                    </div>
+                </div>
+                <button onclick="closeAIReportModal()" class="text-slate-400 hover:text-white text-lg px-2 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed" id="aiModalBody">
+                <div id="aiLoading" class="flex flex-col items-center justify-center py-12 space-y-3">
+                    <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p class="text-slate-400 font-medium animate-pulse">Analizando dataset con Gemini 3 Flash API...</p>
+                </div>
+                <div id="aiReportContent" class="hidden prose prose-invert max-w-none text-xs space-y-3">
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-800 bg-slate-950/60 flex justify-between items-center text-xs">
+                <span class="text-slate-500">Autor: Ingeniero - Robert Ramos Zavala</span>
+                <button onclick="closeAIReportModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium transition border border-slate-700">
+                    Cerrar panel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- File Upload Success Banner -->
+        <div id="fileInfoBanner" class="hidden mb-6 bg-gradient-to-r from-indigo-900/50 to-purple-900/50 border border-indigo-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between backdrop-blur-sm gap-4">
+            <div class="flex items-center space-x-4">
+                <div class="p-2 bg-indigo-500/20 rounded-lg text-indigo-400">
+                    <i class="fa-solid fa-file-excel text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white text-sm" id="fileNameDisplay">dataset.xlsx</h3>
+                    <p class="text-xs text-indigo-200 mt-0.5" id="fileStatsDisplay">Cargados 0 registros.</p>
+                </div>
+            </div>
+            <button onclick="resetDefaultDataset()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-600 transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Restaurar Default</span>
+            </button>
+        </div>
+
+        <!-- 1. RESUMEN EJECUTIVO TAB -->
+        <div id="content-resumen" class="tab-content space-y-6 animate-fade-in">
+            
+            <!-- Global KPIs Section -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition transform group-hover:scale-110">
+                        <i class="fa-solid fa-users text-4xl text-blue-500"></i>
+                    </div>
+                    <p class="text-xs font-medium text-slate-400 mb-1">Total Registros</p>
+                    <div class="flex items-baseline space-x-2">
+                        <h2 class="text-2xl font-bold text-white" id="kpi-total">0</h2>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition transform group-hover:scale-110">
+                        <i class="fa-solid fa-circle-check text-4xl text-emerald-500"></i>
+                    </div>
+                    <p class="text-xs font-medium text-slate-400 mb-1" id="kpi1-label">Aprobados</p>
+                    <div class="flex items-baseline space-x-2">
+                        <h2 class="text-2xl font-bold text-emerald-400" id="kpi-aprobados">0</h2>
+                        <span class="text-xs font-semibold text-emerald-500/70" id="kpi-aprobados-pct">(0%)</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition transform group-hover:scale-110">
+                        <i class="fa-solid fa-circle-xmark text-4xl text-rose-500"></i>
+                    </div>
+                    <p class="text-xs font-medium text-slate-400 mb-1" id="kpi2-label">Desaprobados</p>
+                    <div class="flex items-baseline space-x-2">
+                        <h2 class="text-2xl font-bold text-rose-400" id="kpi-desaprobados">0</h2>
+                        <span class="text-xs font-semibold text-rose-500/70" id="kpi-desaprobados-pct">(0%)</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition transform group-hover:scale-110">
+                        <i class="fa-solid fa-percent text-4xl text-indigo-500"></i>
+                    </div>
+                    <p class="text-xs font-medium text-slate-400 mb-1" id="kpi3-label">Asistencia Prom.</p>
+                    <div class="flex items-baseline space-x-2">
+                        <h2 class="text-2xl font-bold text-indigo-400" id="kpi-asistencia">0%</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Charts Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Chart 1: Resumen General -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
+                    <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-indigo-500"></i> <span id="chart1-title">Distribución General</span>
+                    </h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chartResumenAprobados"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Top Asistencia -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
+                    <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-ranking-star text-emerald-500"></i> <span id="chart2-title">Top 5 Rendimiento Superior</span>
+                    </h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chartResumenAsistencia"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Chart 3: Top Faltas -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
+                    <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> <span id="chart3-title">Atención Prioritaria (Top 5 Deficiente)</span>
+                    </h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chartResumenFaltas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Coincidencias Apellidos -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
+                    <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-network-wired text-amber-500"></i> <span id="chart4-title">Análisis de Agrupaciones</span>
+                    </h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chartResumenApellidos"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. DETALLE CUMPLIMIENTO TAB -->
+        <div id="content-aprobados" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Panel Gráfico -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg lg:col-span-1">
+                    <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-donut text-indigo-500"></i> Proporción de Cumplimiento
+                    </h3>
+                    <div class="relative h-72 w-full">
+                        <canvas id="chartDetalleAprobados"></canvas>
+                    </div>
+                </div>
+
+                <!-- Panel Tabla Desaprobados -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-lg lg:col-span-2 overflow-hidden flex flex-col">
+                    <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                        <h3 class="text-sm font-bold text-rose-400 flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-list"></i> Registros de Bajo Rendimiento (Atención)
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto flex-grow max-h-80 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+                        <table class="w-full text-left text-xs whitespace-nowrap">
+                            <thead class="text-slate-400 bg-slate-950/50 sticky top-0 backdrop-blur-md">
+                                <tr>
+                                    <th class="p-3 font-semibold w-16">#</th>
+                                    <th class="p-3 font-semibold">Identificador / Nombre</th>
+                                    <th class="p-3 font-semibold">Categoría / Grupo</th>
+                                    <th class="p-3 font-semibold text-center">Métrica Principal</th>
+                                    <th class="p-3 font-semibold text-center">Métrica Secundaria</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaDesaprobados" class="divide-y divide-slate-800/50 text-slate-300">
+                                <!-- Data rendered via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. DETALLE MÉTRICA SECUNDARIA TAB -->
+        <div id="content-asistencia" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Top 10 Asistencia -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
+                    <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-emerald-500"></i> Top 10 Mayor Cumplimiento Secundario
+                    </h3>
+                    <div class="relative h-80 w-full">
+                        <canvas id="chartDetalleAsistencia"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top 10 Faltas -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
+                    <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Top 10 Menor Cumplimiento Secundario
+                    </h3>
+                    <div class="relative h-80 w-full">
+                        <canvas id="chartDetalleFaltas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. DETALLE AGRUPACIONES TAB -->
+        <div id="content-parentesco" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Lista de Cards -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-lg lg:col-span-2 p-5">
+                    <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-users-viewfinder text-amber-500"></i> Coincidencias Encontradas (Apellidos / Claves)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-700" id="cardsParentesco">
+                        <!-- Data rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- Panel Gráfico -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg lg:col-span-1 flex flex-col">
+                    <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-indigo-500"></i> Frecuencia de Agrupación
+                    </h3>
+                    <div class="relative flex-grow min-h-[300px] w-full">
+                        <canvas id="chartDetalleParentesco"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. MATRIZ DE DATOS TAB -->
+        <div id="content-lista" class="tab-content hidden space-y-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-lg overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-900/50">
+                    <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-table text-indigo-500"></i> Explorador de Datos Maestros
+                    </h3>
+                    <div class="relative w-full sm:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="text" id="inputSearch" onkeyup="filtrarTabla()" placeholder="Buscar en todas las columnas..." class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block pl-8 p-2 outline-none">
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto max-h-[600px] scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900 relative">
+                    <table class="w-full text-left text-xs whitespace-nowrap">
+                        <thead class="text-slate-400 bg-slate-950 sticky top-0 z-10 shadow-sm" id="tablaHeader">
+                            <!-- Headers rendered via JS -->
+                        </thead>
+                        <tbody id="tablaCompletaBody" class="divide-y divide-slate-800 text-slate-300">
+                            <!-- Data rendered via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-3 border-t border-slate-800 bg-slate-950 text-center text-[10px] text-slate-500">
+                    Mostrando dataset activo. Utiliza el buscador para filtrar filas en tiempo real.
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-xs text-slate-500">© 2026 Dashboard Data Analytics. Diseñado por Ingeniero Robert Ramos Zavala.</p>
+        </div>
+    </footer>
+</body>
+</html>
