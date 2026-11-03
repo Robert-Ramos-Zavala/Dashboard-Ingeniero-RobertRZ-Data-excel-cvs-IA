@@ -243,7 +243,7 @@ async function openAIReportModal() {
         const apiKey = "AQ.Ab8RN6ITwF1q4q1JoI_GMWkuJUoLb1-XtP3v9qP6kg6GmARBCQ"; 
         
         // CORRECCIÓN: Modelo cambiado a gemini-1.5-flash
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-002:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
 
         const payload = {
             contents: [{ parts: [{ text: promptText }] }],
