@@ -604,10 +604,18 @@ function closeAIReportModal() {
 
             const coapellidos = Object.keys(mapApellidos).filter(ap => mapApellidos[ap].length > 1);
             const container = document.getElementById('cardsParentesco');
+            const chartElement = document.getElementById('chartDetalleParentesco');
             
             if (coapellidos.length === 0) {
-                container.innerHTML = `<div class="col-span-full p-4 text-center text-slate-500 text-xs bg-slate-950/50 rounded-xl">No se encontraron coincidencia de apellidos en la muestra actual.</div>`;
+                // Si no hay coincidencias, mostramos el mensaje y OCULTAMOS el canvas para que no se vea roto/blanco
+                container.innerHTML = `<div class="col-span-full p-4 text-center text-slate-500 text-xs bg-slate-950/50 rounded-xl">No se encontraron coincidencias de apellidos en el curso/filtro actual.</div>`;
+                
+                destroyChart('chartDetalleParentesco');
+                if (chartElement) chartElement.style.display = 'none';
             } else {
+                // Si hay datos, nos aseguramos de que el canvas sea visible
+                if (chartElement) chartElement.style.display = 'block';
+                
                 container.innerHTML = coapellidos.map(ap => `
                     <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl">
                         <div class="flex justify-between items-center mb-2">
@@ -619,30 +627,30 @@ function closeAIReportModal() {
                         </ul>
                     </div>
                 `).join('');
-            }
 
-            destroyChart('chartDetalleParentesco');
-            chartInstances['chartDetalleParentesco'] = new Chart(document.getElementById('chartDetalleParentesco'), {
-                type: 'bar',
-                data: {
-                    labels: coapellidos,
-                    datasets: [{
-                        label: 'Número de Coincidencias',
-                        data: coapellidos.map(ap => mapApellidos[ap].length),
-                        backgroundColor: '#f59e0b',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: '#1e293b' } },
-                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                destroyChart('chartDetalleParentesco');
+                chartInstances['chartDetalleParentesco'] = new Chart(chartElement, {
+                    type: 'bar',
+                    data: {
+                        labels: coapellidos,
+                        datasets: [{
+                            label: 'Número de Coincidencias',
+                            data: coapellidos.map(ap => mapApellidos[ap].length),
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 6
+                        }]
                     },
-                    plugins: { legend: { display: false } }
-                }
-            });
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: '#1e293b' } },
+                            x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
         }
 
         function renderTablaCompleta() {
